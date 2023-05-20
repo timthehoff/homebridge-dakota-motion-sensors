@@ -1,15 +1,26 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "DakotaMotionSensors",
   "pluginType": "platform",
   "singular": true,
   "schema": {
-    "type": "object",
-    "properties": {
-      "name": {
-        "title": "Name",
-        "type": "string",
-        "required": true,
-        "default": "Example Dynamic Platform"
+    "sensors": {
+      "title": "Motion Sensors",
+      "type": "array",
+      "items": {
+        "title": "Sensor",
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "required": true
+          },
+          "pin": {
+            "title": "GPIO Pin",
+            "type": "integer",
+            "required": true
+          }
+        }
       }
     }
   }
