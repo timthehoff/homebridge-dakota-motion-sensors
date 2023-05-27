@@ -1,4 +1,5 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import process = require('node:child_process');
 import gpio = require('rpi-gpio');
 
 import { DakotaMotionSensorsPlatform } from './platform';
@@ -12,6 +13,7 @@ gpio.setMode(gpio.MODE_BCM);
  */
 export class DakotaMotionSensorAccessory {
   private service: Service;
+  private name: string;
   private pin: number;
 
   constructor(
@@ -32,7 +34,12 @@ export class DakotaMotionSensorAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
+    this.name = accessory.context.device.name;
+    this.service.setCharacteristic(this.platform.Characteristic.Name, this.name);
+
+    // set up pin
+    this.pin = accessory.context.device.pin;
+    this.setUpPin();
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/MotionSensor
@@ -41,29 +48,43 @@ export class DakotaMotionSensorAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.StatusActive)
       .onGet(this.getActive.bind(this));
 
-    // Updating characteristics values asynchronously.
-    this.pin = accessory.context.device.pin;
-    this.setUpPin();
-
+    // updating characteristics values asynchronously
+    let previous = false;
     setInterval(() => {
       gpio.read(this.pin, (err: string, val: boolean) => {
         if (err) {
-          this.platform.log.error('Failed to read GPIO pin', this.pin, err);
+          this.platform.log.error(`${this.name} - Failed to read GPIO pin (${this.pin})`, err);
           this.setUpPin();
         } else {
-          this.platform.log.info('Read channel %s = %s', this.pin, val);
+          if (val !== previous) {
+            if (val) {
+              this.platform.log.info(`${this.name} - Motion detected!`);
+            }
+            this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, val);
+          }
+          previous = val;
         }
       });
-
-      // this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
     }, 1000);
   }
 
   private setUpPin() {
-    this.platform.log.info('Setting up GPIO pin', this.pin);
-    gpio.setup(this.pin, gpio.DIR_IN, gpio.EDGE_RISING, (err: string) => {
+    this.platform.log.info(`${this.name} - Setting up GPIO pin (${this.pin})`);
+    gpio.setup(this.pin, gpio.DIR_IN, gpio.EDGE_BOTH, (err: string) => {
       if (err) {
-        this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
+        this.platform.log.error(`${this.name} - Failed to set up GPIO pin (${this.pin})`, err);
+      }
+    });
+
+    const python: string = (
+      'import RPi.GPIO as GPIO; ' +
+      'GPIO.setmode(GPIO.BCM); ' +
+      `GPIO.setup(${this.pin}, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)`);
+    const cmd = `python3 -c "${python}"`;
+    process.exec(cmd, (err, output) => {
+      if (err) {
+        this.platform.log.error(`${this.name} - Failed to set up GPIO pin (${this.pin})`, err);
+        this.platform.log.error(output);
       }
     });
   }
