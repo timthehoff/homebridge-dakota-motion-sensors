@@ -46,19 +46,17 @@ export class DakotaMotionSensorAccessory {
     this.pin = accessory.context.device.pin;
     this.setUpPin();
 
-    let motionDetected = false;
+    let previous = false;
     setInterval(() => {
       gpio.read(this.pin, (err: string, val: boolean) => {
         if (err) {
           this.platform.log.error('Failed to read GPIO pin', this.pin, err);
           this.setUpPin();
         } else {
-          this.platform.log.info('Read channel %s = %s', this.pin, val);
-          if (val !== motionDetected) {
+          if (val !== previous) {
             this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, val);
           }
-          motionDetected = val;
-
+          previous = val;
         }
       });
     }, 1000);
@@ -77,7 +75,6 @@ export class DakotaMotionSensorAccessory {
       'GPIO.setmode(GPIO.BCM); ' +
       `GPIO.setup(${this.pin}, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)`);
     const cmd = `python3 -c "${python}"`;
-    this.platform.log.info('Calling Python to finish setup', cmd);
     process.exec(cmd, (err, output) => {
       if (err) {
         this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
