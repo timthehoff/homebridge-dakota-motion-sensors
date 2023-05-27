@@ -1,4 +1,5 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
+import process = require('node:child_process');
 import gpio = require('rpi-gpio');
 
 import { DakotaMotionSensorsPlatform } from './platform';
@@ -61,9 +62,22 @@ export class DakotaMotionSensorAccessory {
 
   private setUpPin() {
     this.platform.log.info('Setting up GPIO pin', this.pin);
-    gpio.setup(this.pin, gpio.DIR_IN, gpio.EDGE_RISING, (err: string) => {
+    gpio.setup(this.pin, gpio.DIR_IN, gpio.EDGE_BOTH, (err: string) => {
       if (err) {
         this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
+      }
+    });
+
+    const python: string = (
+      'import RPi.GPIO as GPIO; ' +
+      'GPIO.setmode(GPIO.BCM); ' +
+      `GPIO.setup(${this.pin}, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)`);
+    const cmd = `python3 -c "${python}"`;
+    this.platform.log.info('Calling Python to finish setup', cmd);
+    process.exec(cmd, (err, output) => {
+      if (err) {
+        this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
+        this.platform.log.error(output);
       }
     });
   }
