@@ -13,6 +13,7 @@ gpio.setMode(gpio.MODE_BCM);
  */
 export class DakotaMotionSensorAccessory {
   private service: Service;
+  private name: string;
   private pin: number;
 
   constructor(
@@ -33,7 +34,12 @@ export class DakotaMotionSensorAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.name);
+    this.name = accessory.context.device.name;
+    this.service.setCharacteristic(this.platform.Characteristic.Name, this.name);
+
+    // set up pin
+    this.pin = accessory.context.device.pin;
+    this.setUpPin();
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/MotionSensor
@@ -42,18 +48,18 @@ export class DakotaMotionSensorAccessory {
     this.service.getCharacteristic(this.platform.Characteristic.StatusActive)
       .onGet(this.getActive.bind(this));
 
-    // Updating characteristics values asynchronously.
-    this.pin = accessory.context.device.pin;
-    this.setUpPin();
-
+    // updating characteristics values asynchronously
     let previous = false;
     setInterval(() => {
       gpio.read(this.pin, (err: string, val: boolean) => {
         if (err) {
-          this.platform.log.error('Failed to read GPIO pin', this.pin, err);
+          this.platform.log.error(`${this.name} - Failed to read GPIO pin (${this.pin})`, err);
           this.setUpPin();
         } else {
           if (val !== previous) {
+            if (val) {
+              this.platform.log.info(`${this.name} - Motion detected!`);
+            }
             this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, val);
           }
           previous = val;
@@ -63,10 +69,10 @@ export class DakotaMotionSensorAccessory {
   }
 
   private setUpPin() {
-    this.platform.log.info('Setting up GPIO pin', this.pin);
+    this.platform.log.info(`${this.name} - Setting up GPIO pin (${this.pin})`);
     gpio.setup(this.pin, gpio.DIR_IN, gpio.EDGE_BOTH, (err: string) => {
       if (err) {
-        this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
+        this.platform.log.error(`${this.name} - Failed to set up GPIO pin (${this.pin})`, err);
       }
     });
 
@@ -77,7 +83,7 @@ export class DakotaMotionSensorAccessory {
     const cmd = `python3 -c "${python}"`;
     process.exec(cmd, (err, output) => {
       if (err) {
-        this.platform.log.error('Failed to set up GPIO pin', this.pin, err);
+        this.platform.log.error(`${this.name} - Failed to set up GPIO pin (${this.pin})`, err);
         this.platform.log.error(output);
       }
     });
