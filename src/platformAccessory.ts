@@ -46,6 +46,7 @@ export class DakotaMotionSensorAccessory {
     this.pin = accessory.context.device.pin;
     this.setUpPin();
 
+    let motionDetected = false;
     setInterval(() => {
       gpio.read(this.pin, (err: string, val: boolean) => {
         if (err) {
@@ -53,10 +54,13 @@ export class DakotaMotionSensorAccessory {
           this.setUpPin();
         } else {
           this.platform.log.info('Read channel %s = %s', this.pin, val);
+          if (val !== motionDetected) {
+            this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, val);
+          }
+          motionDetected = val;
+
         }
       });
-
-      // this.service.updateCharacteristic(this.platform.Characteristic.MotionDetected, motionDetected);
     }, 1000);
   }
 
