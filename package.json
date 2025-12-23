@@ -1,24 +1,25 @@
 {
-  "private": true,
-  "displayName": "Dakota Motion Sensors",
   "name": "homebridge-dakota-motion-sensors",
+  "displayName": "Dakota Motion Sensors",
+  "type": "module",
   "version": "1.0.0",
+  "private": true,
   "description": "Triggers motion sensor accessories through Dakota Alert relay signals.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/timthehoff/homebridge-dakota-motion-sensors.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/timthehoff/homebridge-dakota-motion-sensors/issues"
   },
   "engines": {
-    "node": ">=14.18.1 <19",
-    "homebridge": ">=1.3.5"
+    "node": "^20.9",
+    "homebridge": "^1.11"
   },
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint src/**.ts --max-warnings=0",
+    "lint": "eslint . --max-warnings=0",
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "npm run lint && npm run build"
@@ -26,16 +27,19 @@
   "keywords": [
     "homebridge-plugin"
   ],
+  "dependencies": {
+    "homebridge-lib": "^7.1.12",
+    "rpi-gpio": "^2.1.7"
+  },
   "devDependencies": {
-    "@types/node": "^16.10.9 <19",
-    "@typescript-eslint/eslint-plugin": "^5.0.0",
-    "@typescript-eslint/parser": "^5.0.0",
-    "eslint": "^8.0.1",
-    "homebridge": "^1.3.5",
-    "nodemon": "^2.0.20",
-    "rimraf": "^3.0.2",
-    "rpi-gpio": "^2.1.7",
-    "ts-node": "^10.3.0",
-    "typescript": "^4.4.4"
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^20.9.0",
+    "eslint": "^9.39.1",
+    "homebridge": "^1.11.0",
+    "nodemon": "^3.1.11",
+    "rimraf": "^6.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4"
   }
 }
