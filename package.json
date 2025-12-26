@@ -3,7 +3,6 @@
   "displayName": "Dakota Motion Sensors",
   "type": "module",
   "version": "1.0.0",
-  "private": true,
   "description": "Triggers motion sensor accessories through Dakota Alert relay signals.",
   "license": "Apache-2.0",
   "repository": {
@@ -14,7 +13,7 @@
     "url": "https://github.com/timthehoff/homebridge-dakota-motion-sensors/issues"
   },
   "engines": {
-    "node": "^20.9",
+    "node": "^24.12.0",
     "homebridge": "^1.11"
   },
   "main": "dist/index.js",
