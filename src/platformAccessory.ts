@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-import process = require('node:child_process');
-import gpio = require('rpi-gpio');
+import process from 'node:child_process';
+import gpio from 'rpi-gpio';
 
 import { DakotaMotionSensorsPlatform } from './platform.js';
 
